@@ -1,11 +1,33 @@
 import os
 import asyncio
+import threading
+
+from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from mcstatus import JavaServer
 
+
 MC_HOST = "65.108.6.120"
 MC_PORT = 2431
+
+# Веб-сервер для Render
+web = Flask(__name__)
+
+
+@web.route("/")
+def home():
+    return "VELORIA Status Bot OK"
+
+
+@web.route("/health")
+def health():
+    return "OK"
+
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    web.run(host="0.0.0.0", port=port)
 
 
 def get_server_status():
@@ -54,12 +76,16 @@ def main():
     if not token:
         raise RuntimeError("BOT_TOKEN не задан")
 
+    # Запускаем веб-сервер для Render
+    threading.Thread(target=run_web, daemon=True).start()
+
     app = Application.builder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("online", online))
 
     print("VELORIA Status Bot запущен")
+
     app.run_polling()
 
 
