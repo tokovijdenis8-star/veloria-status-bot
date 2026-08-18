@@ -11,13 +11,17 @@ from mcstatus import JavaServer
 MC_HOST = "65.108.6.120"
 MC_PORT = 2431
 
-# Веб-сервер для Render
+
+# -------------------------
+# Web server for Render
+# -------------------------
+
 web = Flask(__name__)
 
 
 @web.route("/")
 def home():
-    return "VELORIA Status Bot OK"
+    return "VELORIA Status Bot is running!"
 
 
 @web.route("/health")
@@ -29,6 +33,10 @@ def run_web():
     port = int(os.environ.get("PORT", 10000))
     web.run(host="0.0.0.0", port=port)
 
+
+# -------------------------
+# Minecraft status
+# -------------------------
 
 def get_server_status():
     try:
@@ -57,6 +65,10 @@ def get_server_status():
         )
 
 
+# -------------------------
+# Telegram commands
+# -------------------------
+
 async def online(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = await asyncio.to_thread(get_server_status)
     await update.message.reply_text(message)
@@ -70,15 +82,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+# -------------------------
+# Start bot
+# -------------------------
+
 def main():
     token = os.environ.get("BOT_TOKEN")
 
     if not token:
         raise RuntimeError("BOT_TOKEN не задан")
 
-    # Запускаем веб-сервер для Render
+    # Start Render web server
     threading.Thread(target=run_web, daemon=True).start()
 
+    # Start Telegram bot
     app = Application.builder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
